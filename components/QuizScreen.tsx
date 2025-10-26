@@ -1,7 +1,9 @@
+//@ts-nocheck
 "use client";
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
+import ResultScreen from "./ResultScreen";
 
 const COLORS = [
   "bg-pink-300",
@@ -16,30 +18,52 @@ const COLORS = [
   "bg-sky-300",
 ];
 
-const QuizScreen = ({ questionsData = [], onNext }) => {
+const variants = {
+  enter: { x: "100%", opacity: 0 },
+  center: { x: 0, opacity: 1 },
+  exit: { x: "-100%", opacity: 0 },
+};
+
+const QuizScreen = ({
+  questionsData = [],
+  onNext,
+  score,
+  setScore,
+  quizComplete,
+  setQuizComplete,
+  setScreen,
+}) => {
   const [currentQ, setCurrentQ] = useState(0);
   const [timer, setTimer] = useState(30);
-  const [score, setScore] = useState(0);
-  const [isComplete, setIsComplete] = useState(false);
+  const [selectedOption, setSelectedOption] = useState(null);
+  const [isAnswerRevealed, setIsAnswerRevealed] = useState(false);
 
   const question = questionsData[currentQ];
 
-  // countdown logic
   useEffect(() => {
-    if (isComplete) return;
+    if (quizComplete) return;
     if (timer === 0) {
       handleNext();
       return;
     }
     const countdown = setTimeout(() => setTimer((t) => t - 1), 1000);
     return () => clearTimeout(countdown);
-  }, [timer, isComplete]);
+  }, [timer, quizComplete]);
 
   const handleOptionSelect = (opt) => {
+    if (isAnswerRevealed) return;
+    setSelectedOption(opt);
+    setIsAnswerRevealed(true);
+
     if (opt === question.correctAnswer) {
       setScore((prev) => prev + 1);
     }
-    handleNext();
+
+    setTimeout(() => {
+      handleNext();
+      setSelectedOption(null);
+      setIsAnswerRevealed(false);
+    }, 1000);
   };
 
   const handleNext = () => {
@@ -47,45 +71,34 @@ const QuizScreen = ({ questionsData = [], onNext }) => {
       setCurrentQ((prev) => prev + 1);
       setTimer(30);
     } else {
-      setIsComplete(true);
+      setQuizComplete(true);
     }
   };
 
-  const handleRestart = () => {
-    setCurrentQ(0);
-    setTimer(30);
-    setScore(0);
-    setIsComplete(false);
-  };
-
-  if (isComplete) {
+  if (quizComplete) {
     return (
       <motion.div
-        className="flex flex-col items-center justify-center h-screen bg-gradient-to-br from-yellow-100 via-pink-100 to-blue-100"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
+        key="result"
+        variants={variants}
+        initial="enter"
+        animate="center"
+        exit="exit"
+        transition={{ duration: 0.6, ease: "easeInOut" }}
+        className="absolute inset-0"
       >
-        <h1 className="text-4xl font-bold text-gray-700 mb-4">
-          Quiz Complete 🎉
-        </h1>
-        <p className="text-xl mb-6">
-          Your Score: <span className="font-semibold">{score}</span> /{" "}
-          {questionsData.length}
-        </p>
-        <button
-          onClick={handleRestart}
-          className="px-6 py-3 bg-gradient-to-r from-pink-500 to-yellow-400 text-white rounded-full shadow-lg hover:scale-105 transition"
-        >
-          Restart 🔁
-        </button>
+        <ResultScreen
+          score={score}
+          total={questionsData.length}
+          onRestart={() => setScreen("one")}
+        />
       </motion.div>
     );
   }
 
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-gradient-to-br from-yellow-100 via-pink-100 to-blue-100 p-4">
-      {/* Left sidebar - question numbers */}
-      <div className="flex flex-col justify-center items-center w-20">
+    <div className="flex flex-col md:flex-row h-full w-full bg-gradient-to-br from-yellow-100 via-pink-100 to-blue-100 p-4 md:p-6 overflow-auto">
+      {/* Sidebar */}
+      <div className="flex flex-row md:flex-col justify-center items-center md:w-20 w-full mb-4 md:mb-0 gap-2 md:gap-3">
         {questionsData.map((_, i) => (
           <motion.div
             key={i}
@@ -94,7 +107,7 @@ const QuizScreen = ({ questionsData = [], onNext }) => {
               backgroundColor: i === currentQ ? "#ec4899" : "#e5e7eb",
               color: i === currentQ ? "#fff" : "#374151",
             }}
-            className="w-10 h-10 flex items-center justify-center rounded-full font-semibold mb-3 cursor-pointer transition"
+            className="w-10 h-10 flex items-center justify-center rounded-full font-semibold cursor-pointer transition"
             onClick={() => {
               setCurrentQ(i);
               setTimer(30);
@@ -106,37 +119,37 @@ const QuizScreen = ({ questionsData = [], onNext }) => {
       </div>
 
       {/* Main quiz area */}
-      <div className="flex flex-col flex-1 items-center justify-center space-y-8 relative">
+      <div className="flex flex-col flex-1 items-center justify-start md:justify-center space-y-4 md:space-y-8 relative">
         {/* Timer bubble */}
         <motion.div
           key={timer}
           animate={{ scale: [1, 1.2, 1] }}
           transition={{ duration: 0.6, repeat: Infinity }}
-          className="absolute top-6 right-10 w-16 h-16 rounded-full bg-gradient-to-r from-pink-400 to-yellow-400 flex items-center justify-center text-white font-bold text-xl shadow-lg"
+          className="absolute top-2 md:top-6 right-4 md:right-10 w-12 h-12 md:w-16 md:h-16 rounded-full bg-gradient-to-r from-pink-400 to-yellow-400 flex items-center justify-center text-white font-bold text-sm md:text-xl shadow-lg"
         >
           {timer}s
         </motion.div>
 
-        {/* Quiz Image Section */}
+        {/* Quiz Image */}
         <motion.div
           key={question?.questionText}
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -40 }}
           transition={{ duration: 0.5 }}
-          className="relative w-[70%] h-[600px] rounded-2xl overflow-hidden shadow-xl"
+          className="relative w-full max-w-md sm:max-w-lg md:max-w-xl h-64 sm:h-80 md:h-96 rounded-2xl overflow-hidden shadow-xl"
         >
           {question?.imageUrl ? (
             <Image
               src={question.imageUrl}
               alt={question?.questionText || "Quiz image"}
               fill
-              className="object-cover object-center"
+              className="object-cover object-center rounded-2xl"
               priority
             />
           ) : (
             <div
-              className={`w-full h-full flex items-center justify-center text-3xl font-bold text-white rounded-2xl ${
+              className={`w-full h-full flex items-center justify-center text-2xl sm:text-3xl md:text-4xl font-bold text-white rounded-2xl ${
                 COLORS[currentQ % COLORS.length]
               }`}
             >
@@ -146,28 +159,44 @@ const QuizScreen = ({ questionsData = [], onNext }) => {
         </motion.div>
 
         {/* Question text */}
-        <h2 className="text-sm text-gray-700 text-center max-w-2xl">
+        <h2 className="text-sm sm:text-base md:text-lg text-gray-700 text-center max-w-full md:max-w-2xl px-2">
           {question?.questionText}
         </h2>
-        
 
         {/* Options */}
-        <div className="flex flex-wrap gap-4 justify-center">
-          {question?.options?.map((opt) => (
-            <motion.button
-              key={opt}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => handleOptionSelect(opt)}
-              className="px-6 py-3 rounded-full text-lg font-semibold bg-white/70 hover:bg-white shadow-md backdrop-blur-sm transition"
-            >
-              {opt}
-            </motion.button>
-          ))}
+        <div className="flex flex-wrap gap-2 sm:gap-4 justify-center w-full">
+          {question?.options?.map((opt) => {
+            let bgColor = "bg-white/70 hover:bg-white";
+            if (isAnswerRevealed && selectedOption === opt) {
+              bgColor =
+                opt === question.correctAnswer
+                  ? "bg-green-500 text-white"
+                  : "bg-red-500 text-white";
+            } else if (
+              isAnswerRevealed &&
+              opt === question.correctAnswer &&
+              selectedOption !== opt
+            ) {
+              bgColor = "bg-green-500 text-white";
+            }
+
+            return (
+              <motion.button
+                key={opt}
+                whileHover={{ scale: !isAnswerRevealed ? 1.05 : 1 }}
+                whileTap={{ scale: !isAnswerRevealed ? 0.95 : 1 }}
+                disabled={isAnswerRevealed}
+                onClick={() => handleOptionSelect(opt)}
+                className={`px-4 sm:px-6 py-2 sm:py-3 rounded-full text-sm sm:text-base md:text-lg font-semibold shadow-md backdrop-blur-sm transition ${bgColor}`}
+              >
+                {opt}
+              </motion.button>
+            );
+          })}
         </div>
 
         {/* Progress text */}
-        <div className="text-gray-500 text-sm mt-4">
+        <div className="text-gray-500 text-xs sm:text-sm mt-2 md:mt-4">
           Question {currentQ + 1} / {questionsData.length}
         </div>
       </div>

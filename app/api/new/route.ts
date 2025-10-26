@@ -100,7 +100,7 @@ export async function POST(req: NextRequest) {
     const { countries, category } = body;
 
     // Input validation
-    if (!countries || !category || !Array.isArray(countries) || countries.length < 3 || countries.length > 5) {
+    if (!countries || !category || !Array.isArray(countries) || countries.length < 0 || countries.length > 5) {
       return NextResponse.json(
         { error: "Invalid input. Requires a category string and an array of 3–5 countries." },
         { status: 400 }

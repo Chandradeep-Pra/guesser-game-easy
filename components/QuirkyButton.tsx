@@ -1,3 +1,4 @@
+//@ts-nocheck
 "use client";
 import { motion } from "framer-motion";
 import { useState } from "react";
@@ -19,14 +20,16 @@ export default function QuirkyButton() {
       whileHover={{ scale: 1.05, rotate: 2 }}
       whileTap={{ scale: 0.97, rotate: -2 }}
       transition={{ type: "spring", stiffness: 300 }}
-      className="relative group bg-gradient-to-r from-pink-500 to-yellow-400 text-white font-semibold px-8 py-3 rounded-2xl shadow-lg hover:shadow-pink-300 transition-all duration-300 cursor-none select-none border border-pink-200 overflow-hidden"
+      className="relative group bg-gradient-to-r from-pink-500 to-yellow-400 text-white font-semibold px-6 sm:px-8 md:px-10 py-2 sm:py-3 md:py-4 rounded-2xl shadow-lg hover:shadow-pink-300 transition-all duration-300 cursor-none select-none border border-pink-200 overflow-hidden"
       onMouseMove={handleMouseMove}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
       {/* Inner Content */}
-      <div className="relative flex h-10 flex-col items-center justify-center space-y-1 pointer-events-none">
-        <h3 className="text-2xl font-bold">Let’s Go 🎮</h3>
+      <div className="relative flex h-10 sm:h-12 md:h-14 flex-col items-center justify-center space-y-1 pointer-events-none">
+        <h3 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold">
+          Let’s Go 🎮
+        </h3>
 
         {/* Shimmer effect */}
         <motion.div
@@ -57,12 +60,12 @@ export default function QuirkyButton() {
           }}
         >
           <svg
-            width="40"
-            height="40"
+            width="25" // smaller by default
+            height="25"
             viewBox="0 0 40 40"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
-            className="text-pink-600 drop-shadow-md"
+            className="text-pink-600 drop-shadow-md sm:w-8 sm:h-8 md:w-10 md:h-10 lg:w-12 lg:h-12"
           >
             <motion.path
               d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"

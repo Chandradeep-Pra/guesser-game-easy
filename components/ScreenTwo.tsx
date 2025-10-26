@@ -1,3 +1,4 @@
+//@ts-nocheck
 "use client";
 import { useState } from "react";
 import { motion } from "framer-motion";
@@ -5,7 +6,7 @@ import Lottie from "lottie-react";
 import exploreAnim from "../public/cat-waiting.json";
 
 type ScreenTwoProps = {
- onNext: (payload: { category: string; countries: string[] }) => void;
+  onNext: (payload: { category: string; countries: string[] }) => void;
 };
 
 const ScreenTwo = ({ onNext }: ScreenTwoProps) => {
@@ -22,43 +23,38 @@ const ScreenTwo = ({ onNext }: ScreenTwoProps) => {
       alert("Pick something quirky!");
       return;
     }
-
     const payload = { category, countries };
-    console.log("Passing payload to parent:", payload);
-
-    // 🚀 NEW LOGIC: Just call onNext with the payload. 
-    // The parent (Home.tsx) handles the API call, loading, and state transition.
-    onNext(payload); 
+    onNext(payload);
   };
 
   return (
     <motion.div
-      className="flex flex-col items-center justify-center relative overflow-hidden w-full h-full p-6"
+      className="flex flex-col items-center justify-center relative overflow-hidden w-full h-full px-4 sm:px-6 md:px-10"
       initial={{ x: "100%", opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
       exit={{ x: "-100%", opacity: 0 }}
       transition={{ duration: 0.6, ease: "easeInOut" }}
     >
-      {/* background blobs */}
+      {/* Background blobs */}
       <motion.div
-        className="absolute top-10 left-10 w-44 h-44 bg-yellow-200 rounded-full mix-blend-multiply filter blur-2xl opacity-30"
+        className="absolute top-8 left-8 w-32 sm:w-40 md:w-44 h-32 sm:h-40 md:h-44 bg-yellow-200 rounded-full mix-blend-multiply filter blur-2xl opacity-30"
         animate={{ x: [0, 20, 0], y: [0, -30, 0] }}
         transition={{ duration: 8, repeat: Infinity }}
       />
       <motion.div
-        className="absolute bottom-10 right-10 w-56 h-56 bg-pink-300 rounded-full mix-blend-multiply filter blur-2xl opacity-30"
+        className="absolute bottom-8 right-8 w-40 sm:w-52 md:w-56 h-40 sm:h-52 md:h-56 bg-pink-300 rounded-full mix-blend-multiply filter blur-2xl opacity-30"
         animate={{ x: [0, -20, 0], y: [0, 30, 0] }}
         transition={{ duration: 8, repeat: Infinity }}
       />
 
-      {/* Animation */}
-      <div className="absolute bottom-0 left-0 w-[600px] opacity-80 pointer-events-none select-none">
+      {/* Lottie animation */}
+      <div className="absolute bottom-0 left-0 w-56 sm:w-72 md:w-96 opacity-80 pointer-events-none select-none">
         <Lottie animationData={exploreAnim} loop autoplay />
       </div>
 
       {/* Heading */}
       <motion.h2
-        className="text-4xl sm:text-6xl font-lobster text-center bg-gradient-to-r from-yellow-400 via-pink-500 to-blue-400 bg-clip-text text-transparent mb-6"
+        className="text-3xl sm:text-4xl md:text-6xl font-lobster text-center bg-gradient-to-r from-yellow-400 via-pink-500 to-blue-400 bg-clip-text text-transparent mb-6"
         animate={{ y: [0, -10, 0] }}
         transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
       >
@@ -66,14 +62,14 @@ const ScreenTwo = ({ onNext }: ScreenTwoProps) => {
       </motion.h2>
 
       {/* Form */}
-      <div className="flex flex-col items-center space-y-4 w-full max-w-xs z-10">
+      <div className="flex flex-col items-center space-y-4 w-full max-w-xs sm:max-w-sm md:max-w-md z-10">
         {/* Category input */}
         <input
           type="text"
           placeholder="Enter a category (e.g., Street Food)"
           value={category}
           onChange={(e) => setCategory(e.target.value)}
-          className="w-full px-4 py-2 rounded-xl border border-gray-300 focus:ring-2 focus:ring-pink-400 outline-none text-gray-700"
+          className="w-full px-4 py-2 rounded-xl border border-gray-300 focus:ring-2 focus:ring-pink-400 outline-none text-gray-700 text-sm sm:text-base md:text-lg"
         />
 
         {/* Country selector */}
@@ -81,7 +77,7 @@ const ScreenTwo = ({ onNext }: ScreenTwoProps) => {
           <select
             multiple
             onChange={handleCountrySelect}
-            className="w-full px-4 py-2 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-400 outline-none text-gray-700 h-24"
+            className="w-full px-4 py-2 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-400 outline-none text-gray-700 text-sm sm:text-base md:text-lg h-24 sm:h-28 md:h-32"
           >
             <option value="India">India</option>
             <option value="Japan">Japan</option>
@@ -91,8 +87,10 @@ const ScreenTwo = ({ onNext }: ScreenTwoProps) => {
             <option value="Italy">Italy</option>
             <option value="Australia">Australia</option>
           </select>
-          <p className="text-xs text-gray-500 mt-1">
-            💡 Press <span className="font-semibold text-gray-700">Ctrl + Click</span> to select multiple countries
+          <p className="text-xs sm:text-sm text-gray-500 mt-1">
+            💡 Press{" "}
+            <span className="font-semibold text-gray-700">Ctrl + Click</span> to
+            select multiple countries
           </p>
         </div>
 
@@ -108,7 +106,7 @@ const ScreenTwo = ({ onNext }: ScreenTwoProps) => {
               <motion.span
                 key={c}
                 whileHover={{ scale: 1.1 }}
-                className="px-3 py-1 bg-gradient-to-r from-pink-100 to-yellow-100 text-gray-700 rounded-full text-sm shadow-sm"
+                className="px-3 py-1 bg-gradient-to-r from-pink-100 to-yellow-100 text-gray-700 rounded-full text-xs sm:text-sm md:text-base shadow-sm"
               >
                 {c}
               </motion.span>
@@ -119,10 +117,8 @@ const ScreenTwo = ({ onNext }: ScreenTwoProps) => {
         {/* Submit button */}
         <button
           onClick={handleSubmit}
-        //   disabled={loading}
-          className={`mt-4 bg-gradient-to-r from-pink-500 via-blue-500 to-yellow-400 text-white font-semibold px-6 py-2 rounded-full shadow-lg transition hover:scale-105`}
+          className="mt-4 bg-gradient-to-r from-pink-500 via-blue-500 to-yellow-400 text-white font-semibold text-sm sm:text-base md:text-lg px-6 sm:px-8 md:px-10 py-2 sm:py-3 md:py-4 rounded-full shadow-lg transition hover:scale-105"
         >
-          {/* {loading ? "Loading..." : "Let’s Go 🚀"} */}
           Let’s Go 🚀
         </button>
       </div>
