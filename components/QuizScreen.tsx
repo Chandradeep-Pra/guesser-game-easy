@@ -1,6 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
+import Image from "next/image";
 
 const COLORS = [
   "bg-pink-300",
@@ -15,7 +16,7 @@ const COLORS = [
   "bg-sky-300",
 ];
 
-const QuizScreen = ({ questionsData = [] , onNext}) => {
+const QuizScreen = ({ questionsData = [], onNext }) => {
   const [currentQ, setCurrentQ] = useState(0);
   const [timer, setTimer] = useState(30);
   const [score, setScore] = useState(0);
@@ -64,9 +65,12 @@ const QuizScreen = ({ questionsData = [] , onNext}) => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
       >
-        <h1 className="text-4xl font-bold text-gray-700 mb-4">Quiz Complete 🎉</h1>
+        <h1 className="text-4xl font-bold text-gray-700 mb-4">
+          Quiz Complete 🎉
+        </h1>
         <p className="text-xl mb-6">
-          Your Score: <span className="font-semibold">{score}</span> / {questionsData.length}
+          Your Score: <span className="font-semibold">{score}</span> /{" "}
+          {questionsData.length}
         </p>
         <button
           onClick={handleRestart}
@@ -113,24 +117,39 @@ const QuizScreen = ({ questionsData = [] , onNext}) => {
           {timer}s
         </motion.div>
 
-        {/* Image placeholder */}
+        {/* Quiz Image Section */}
         <motion.div
           key={question?.questionText}
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -40 }}
           transition={{ duration: 0.5 }}
-          className={`w-[70%] h-[300px] rounded-2xl shadow-xl ${
-            COLORS[currentQ % COLORS.length]
-          } flex items-center justify-center text-3xl font-bold text-white`}
+          className="relative w-[70%] h-[600px] rounded-2xl overflow-hidden shadow-xl"
         >
-          {question?.imageSearchQuery || `Image ${currentQ + 1}`}
+          {question?.imageUrl ? (
+            <Image
+              src={question.imageUrl}
+              alt={question?.questionText || "Quiz image"}
+              fill
+              className="object-cover object-center"
+              priority
+            />
+          ) : (
+            <div
+              className={`w-full h-full flex items-center justify-center text-3xl font-bold text-white rounded-2xl ${
+                COLORS[currentQ % COLORS.length]
+              }`}
+            >
+              {question?.imageSearchQuery || `Image ${currentQ + 1}`}
+            </div>
+          )}
         </motion.div>
 
         {/* Question text */}
-        <h2 className="text-2xl text-gray-700 text-center max-w-2xl">
+        <h2 className="text-sm text-gray-700 text-center max-w-2xl">
           {question?.questionText}
         </h2>
+        
 
         {/* Options */}
         <div className="flex flex-wrap gap-4 justify-center">

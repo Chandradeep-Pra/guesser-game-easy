@@ -31,41 +31,54 @@ const responseSchema = {
 
 // In a real application, this function would call an external API
 // (e.g., Google Custom Search, Unsplash, Pexels) using the query to get a direct URL.
-export async function fetchImageUrlFromSearchQuery(searchQuery) {
+// utils/fetchImageUrl.ts
+
+export async function fetchImageUrlFromSearchQuery(searchQuery: string) {
   const apiKey = process.env.NEXT_PUBLIC_PEXELS_API_KEY;
 
   if (!apiKey) {
-    console.error("PEXELS_API_KEY is missing in environment variables.");
+    console.error("❌ PEXELS_API_KEY is missing in environment variables.");
     return null;
   }
 
   try {
     const res = await fetch(
-      `https://api.pexels.com/v1/search?query=${encodeURIComponent(searchQuery)}&per_page=1`,
+      `https://api.pexels.com/v1/search?query=${encodeURIComponent(searchQuery)}&per_page=1&orientation=landscape`,
       {
         headers: {
           Authorization: apiKey,
         },
+        next: { revalidate: 86400 }, // ✅ cache results for 1 day (Next.js optimization)
       }
     );
 
     if (!res.ok) {
-      console.error("Pexels API error:", res.statusText);
+      console.error("❌ Pexels API error:", res.status, res.statusText);
       return null;
     }
 
     const data = await res.json();
+
     if (data.photos && data.photos.length > 0) {
-      return data.photos[0].src.medium; // or data.photos[0].src.original for HD
+      const photo = data.photos[0].src;
+
+      // ✅ return the highest-quality URL
+      return (
+        photo.large2x || // 1920px wide HD
+        photo.original || // full-size source image
+        photo.large || // fallback
+        photo.medium
+      );
     } else {
-      console.warn("No image found for:", searchQuery);
+      console.warn("⚠️ No image found for:", searchQuery);
       return null;
     }
   } catch (error) {
-    console.error("Error fetching image:", error);
+    console.error("💥 Error fetching image:", error);
     return null;
   }
 }
+
 
 
 // Helper function is no longer needed when using generationConfig, but kept for legacy:
