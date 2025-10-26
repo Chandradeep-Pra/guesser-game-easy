@@ -5,13 +5,12 @@ import Lottie from "lottie-react";
 import exploreAnim from "../public/cat-waiting.json";
 
 type ScreenTwoProps = {
-  onNext: (data: any) => void;
+ onNext: (payload: { category: string; countries: string[] }) => void;
 };
 
 const ScreenTwo = ({ onNext }: ScreenTwoProps) => {
   const [category, setCategory] = useState("");
   const [countries, setCountries] = useState<string[]>([]);
-  const [loading, setLoading] = useState(false);
 
   const handleCountrySelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selected = Array.from(e.target.selectedOptions, (opt) => opt.value);
@@ -24,30 +23,12 @@ const ScreenTwo = ({ onNext }: ScreenTwoProps) => {
       return;
     }
 
-    const body = { category, countries };
-    console.log("Request body:", body);
+    const payload = { category, countries };
+    console.log("Passing payload to parent:", payload);
 
-    try {
-      setLoading(true);
-      const res = await fetch("/api/ashan", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-
-      if (!res.ok) throw new Error("API request failed");
-
-      const data = await res.json();
-      console.log("Response from API:", data);
-
-      // Pass to next screen
-      onNext && onNext(data);
-    } catch (err) {
-      console.error("Error fetching quiz data:", err);
-      alert("Something went wrong! Please try again.");
-    } finally {
-      setLoading(false);
-    }
+    // 🚀 NEW LOGIC: Just call onNext with the payload. 
+    // The parent (Home.tsx) handles the API call, loading, and state transition.
+    onNext(payload); 
   };
 
   return (
@@ -138,12 +119,11 @@ const ScreenTwo = ({ onNext }: ScreenTwoProps) => {
         {/* Submit button */}
         <button
           onClick={handleSubmit}
-          disabled={loading}
-          className={`mt-4 bg-gradient-to-r from-pink-500 via-blue-500 to-yellow-400 text-white font-semibold px-6 py-2 rounded-full shadow-lg transition ${
-            loading ? "opacity-60 cursor-not-allowed" : "hover:scale-105"
-          }`}
+        //   disabled={loading}
+          className={`mt-4 bg-gradient-to-r from-pink-500 via-blue-500 to-yellow-400 text-white font-semibold px-6 py-2 rounded-full shadow-lg transition hover:scale-105`}
         >
-          {loading ? "Loading..." : "Let’s Go 🚀"}
+          {/* {loading ? "Loading..." : "Let’s Go 🚀"} */}
+          Let’s Go 🚀
         </button>
       </div>
     </motion.div>
