@@ -1,7 +1,7 @@
 // app/api/ashan/route.ts
 import { NextRequest, NextResponse } from "next/server";
 
-const GEMINI_API_KEY = process.env.NEXT_PUBLIC_GEMINI_API_KEY || "";
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || "";
 const MODEL_NAME = "gemini-2.5-flash-preview-09-2025";
 const API_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models";
 
@@ -14,7 +14,7 @@ const responseSchema = {
     correctAnswer: { type: "STRING" },
     options: { type: "ARRAY", items: { type: "STRING" } },
   },
-  required: ["imageSearchQuery", "questionText", "correctAnswer", "options"]
+  required: ["imageSearchQuery", "questionText", "correctAnswer", "options"],
 };
 
 export async function POST(req: NextRequest) {
@@ -41,7 +41,8 @@ export async function POST(req: NextRequest) {
     ) {
       return NextResponse.json(
         {
-          error: "Invalid input. Requires a category string and an array of 3–5 countries."
+          error:
+            "Invalid input. Requires a category string and an array of 3–5 countries.",
         },
         { status: 400 }
       );
@@ -70,7 +71,7 @@ export async function POST(req: NextRequest) {
     // 5️⃣ Construct Gemini API payload (without tools)
     const payload = {
       contents: [{ parts: [{ text: userQuery }] }],
-      systemInstruction: { parts: [{ text: systemPrompt }] }
+      systemInstruction: { parts: [{ text: systemPrompt }] },
     };
 
     const apiUrl = `${API_BASE_URL}/${MODEL_NAME}:generateContent?key=${GEMINI_API_KEY}`;
@@ -82,19 +83,21 @@ export async function POST(req: NextRequest) {
     for (let attempt = 0; attempt < maxRetries; attempt++) {
       if (attempt > 0) {
         // Exponential backoff: 1s, 2s, 4s
-        await new Promise(r => setTimeout(r, Math.pow(2, attempt) * 1000));
+        await new Promise((r) => setTimeout(r, Math.pow(2, attempt) * 1000));
       }
 
       try {
         const apiResponse = await fetch(apiUrl, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
+          body: JSON.stringify(payload),
         });
 
         if (!apiResponse.ok) {
           const errorDetail = await apiResponse.text();
-          lastError = `Gemini API HTTP error: ${apiResponse.status} ${apiResponse.statusText}. Detail: ${errorDetail.substring(0, 100)}`;
+          lastError = `Gemini API HTTP error: ${apiResponse.status} ${
+            apiResponse.statusText
+          }. Detail: ${errorDetail.substring(0, 100)}`;
           continue;
         }
 
@@ -102,7 +105,8 @@ export async function POST(req: NextRequest) {
         const jsonText = result.candidates?.[0]?.content?.parts?.[0]?.text;
 
         if (!jsonText) {
-          lastError = "Gemini API response missing content or candidate failed.";
+          lastError =
+            "Gemini API response missing content or candidate failed.";
           continue;
         }
 
@@ -110,7 +114,10 @@ export async function POST(req: NextRequest) {
           const quizData = JSON.parse(jsonText);
           return NextResponse.json(quizData, { status: 200 });
         } catch (e) {
-          lastError = `LLM returned invalid JSON: ${jsonText.substring(0, 100)}...`;
+          lastError = `LLM returned invalid JSON: ${jsonText.substring(
+            0,
+            100
+          )}...`;
         }
       } catch (err: any) {
         lastError = `Fetch error: ${err.message}`;
@@ -121,14 +128,18 @@ export async function POST(req: NextRequest) {
     console.error("Failed to generate quiz:", lastError);
     return NextResponse.json(
       {
-        error: "Failed to generate quiz question from AI service after multiple retries.",
-        detail: lastError
+        error:
+          "Failed to generate quiz question from AI service after multiple retries.",
+        detail: lastError,
       },
       { status: 500 }
     );
   } catch (err: any) {
     return NextResponse.json(
-      { error: "Internal server error during request processing.", detail: err.message },
+      {
+        error: "Internal server error during request processing.",
+        detail: err.message,
+      },
       { status: 500 }
     );
   }

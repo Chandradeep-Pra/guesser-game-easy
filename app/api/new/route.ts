@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 // IMPORTANT: Using NEXT_PUBLIC here exposes the key, ensure this is handled securely in a real app.
-const GEMINI_API_KEY = process.env.NEXT_PUBLIC_GEMINI_API_KEY || "";
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || "";
 const MODEL_NAME = "gemini-2.5-flash-preview-09-2025";
 const API_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models";
 
@@ -34,7 +34,7 @@ const responseSchema = {
 // utils/fetchImageUrl.ts
 
 export async function fetchImageUrlFromSearchQuery(searchQuery: string) {
-  const apiKey = process.env.NEXT_PUBLIC_PEXELS_API_KEY;
+  const apiKey = process.env.PEXELS_API_KEY;
 
   if (!apiKey) {
     console.error("❌ PEXELS_API_KEY is missing in environment variables.");
@@ -43,7 +43,9 @@ export async function fetchImageUrlFromSearchQuery(searchQuery: string) {
 
   try {
     const res = await fetch(
-      `https://api.pexels.com/v1/search?query=${encodeURIComponent(searchQuery)}&per_page=1&orientation=landscape`,
+      `https://api.pexels.com/v1/search?query=${encodeURIComponent(
+        searchQuery
+      )}&per_page=1&orientation=landscape`,
       {
         headers: {
           Authorization: apiKey,
@@ -79,13 +81,10 @@ export async function fetchImageUrlFromSearchQuery(searchQuery: string) {
   }
 }
 
-
-
 // Helper function is no longer needed when using generationConfig, but kept for legacy:
 // function cleanJsonString(text: string) {
 //   return text.replace(/^```json\s*/, "").replace(/```$/, "").trim();
 // }
-
 
 export async function POST(req: NextRequest) {
   if (!GEMINI_API_KEY) {
@@ -100,9 +99,18 @@ export async function POST(req: NextRequest) {
     const { countries, category } = body;
 
     // Input validation
-    if (!countries || !category || !Array.isArray(countries) || countries.length < 0 || countries.length > 5) {
+    if (
+      !countries ||
+      !category ||
+      !Array.isArray(countries) ||
+      countries.length < 0 ||
+      countries.length > 5
+    ) {
       return NextResponse.json(
-        { error: "Invalid input. Requires a category string and an array of 3–5 countries." },
+        {
+          error:
+            "Invalid input. Requires a category string and an array of 3–5 countries.",
+        },
         { status: 400 }
       );
     }
@@ -138,18 +146,21 @@ DO NOT include any extra text, explanation, or Markdown outside the resulting JS
     let quizData: any[] | null = null;
 
     for (let attempt = 0; attempt < maxRetries; attempt++) {
-      if (attempt > 0) await new Promise(r => setTimeout(r, Math.pow(2, attempt) * 1000));
+      if (attempt > 0)
+        await new Promise((r) => setTimeout(r, Math.pow(2, attempt) * 1000));
 
       try {
         const apiResponse = await fetch(apiUrl, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
+          body: JSON.stringify(payload),
         });
 
         if (!apiResponse.ok) {
           const errorDetail = await apiResponse.text();
-          lastError = `Gemini API HTTP error: ${apiResponse.status} ${apiResponse.statusText}. Detail: ${errorDetail.substring(0, 100)}`;
+          lastError = `Gemini API HTTP error: ${apiResponse.status} ${
+            apiResponse.statusText
+          }. Detail: ${errorDetail.substring(0, 100)}`;
           continue;
         }
 
@@ -158,7 +169,8 @@ DO NOT include any extra text, explanation, or Markdown outside the resulting JS
         const jsonText = result.candidates?.[0]?.content?.parts?.[0]?.text;
 
         if (!jsonText) {
-          lastError = "Gemini API response missing content or candidate failed.";
+          lastError =
+            "Gemini API response missing content or candidate failed.";
           continue;
         }
 
@@ -173,40 +185,48 @@ DO NOT include any extra text, explanation, or Markdown outside the resulting JS
             lastError = `Returned JSON does not contain exactly 10 questions.`;
           }
         } catch (e: any) {
-          lastError = `LLM returned invalid JSON: ${e.message}. Raw output start: ${jsonText.substring(0, 200)}...`;
+          lastError = `LLM returned invalid JSON: ${
+            e.message
+          }. Raw output start: ${jsonText.substring(0, 200)}...`;
         }
-
       } catch (err: any) {
         lastError = `Fetch error: ${err.message}`;
       }
     }
 
     if (!quizData) {
-       // If all retries fail
-       console.error("Failed to generate quiz:", lastError);
-       return NextResponse.json(
-         { error: "Failed to generate 10 quiz questions from AI service.", detail: lastError },
-         { status: 500 }
-       );
+      // If all retries fail
+      console.error("Failed to generate quiz:", lastError);
+      return NextResponse.json(
+        {
+          error: "Failed to generate 10 quiz questions from AI service.",
+          detail: lastError,
+        },
+        { status: 500 }
+      );
     }
-    
+
     // --- STEP 3: Fetch Images for Each Question (Sequential Fetching) ---
-    
+
     const questionsWithImages = await Promise.all(
-        quizData.map(async (question) => {
-            const imageUrl = await fetchImageUrlFromSearchQuery(question.imageSearchQuery);
-            return {
-                ...question,
-                imageUrl: imageUrl, // Add the new imageUrl field
-            };
-        })
+      quizData.map(async (question) => {
+        const imageUrl = await fetchImageUrlFromSearchQuery(
+          question.imageSearchQuery
+        );
+        return {
+          ...question,
+          imageUrl: imageUrl, // Add the new imageUrl field
+        };
+      })
     );
 
     return NextResponse.json(questionsWithImages, { status: 200 });
-
   } catch (err: any) {
     return NextResponse.json(
-      { error: "Internal server error during request processing.", detail: err.message },
+      {
+        error: "Internal server error during request processing.",
+        detail: err.message,
+      },
       { status: 500 }
     );
   }
